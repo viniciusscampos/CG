@@ -7,8 +7,6 @@ var ballMesh;
 var moveObject = false;
 var moveMode = true;
 var rotateStartPoint = { x: 0, y:0};
-var rotateAxis = new THREE.Vector3(0,0,0);
-var rotateAngle = 0;
 var isDragging = false;
 
 function init(){
@@ -39,10 +37,7 @@ function init(){
 		renderer.setSize( window.innerWidth, window.innerHeight );
 		renderer.setClearColor( 0xffffff);
 		document.body.appendChild( renderer.domElement );
-
-		//translate
 		
-
 		//Events
 		THREEx.WindowResize(renderer, camera);
 		document.addEventListener("mousedown", onMouseLeftButtomDown, false);
@@ -76,7 +71,7 @@ function init(){
 
 
 function createCube(geometry,desiredMaterial,position){
-	//receives an array containing the geometry, an array containing the informations of the desired material and the position where the cube must be created
+	//receives an array containing the geometry, another array containing the informations of the desired material and the position where the cube must be created
 	//responsible for create the desired cube mesh
 
 	var geometry = new THREE.BoxGeometry(geometry[0],geometry[1],geometry[2]);
@@ -93,26 +88,28 @@ function createCube(geometry,desiredMaterial,position){
 }
 
 function insertObjects(){
-	//insert all the created objects in the scene
+	//insert all the created objects on the scene
 		for(var i =0; i< objects.length; i++){
 			scene.add(objects[i]);
 		}
-
 }
 
 
 function onKeyPressed(event){						
-	if(event.keyCode == 100){
-		if(selection != null & container != null){
-			scene.remove(selection);		
-			scene.remove(container);			
+	if(event.keyCode == 100){		
+		if(selection != null){
+			scene.remove(selection);					
 			var index = objects.indexOf(selection);
 			objects.splice(index, 1);
 			selection = null;
-			container = null;
+			//in case the cube was selected on the rotate mode
+			if(container != null){
+				scene.remove(container);
+				container = null;
+			}
 		}
 	}
-	//if the key pressed iguals "c" change the current mode to rotate or move
+	//if the key pressed iguals "c" change the current mode between rotate and move
 	else if(event.keyCode == 99){
 		moveMode = !moveMode;
 
@@ -137,21 +134,17 @@ function update(){
 
 function createContainer(selectedCube){
 	//create a container to involve the current selected cube
-	//stores the center of the selected object
+	//stores the center of the current selected cube
 	pos = [selection.position.x, selection.position.y, selection.position.z]
 
 	//create a new mesh to be used in the BoxHelper
 	var geometry = new THREE.BoxGeometry(dimensions + 4, dimensions+4,dimensions+4);
 	var material = new THREE.MeshLambertMaterial ( { color: 0xffffff} );
-	var mesh = new THREE.Mesh( geometry, material);
+	var mesh = new THREE.Mesh( geometry, material);	
 
 	mesh.position.x = pos[0];
 	mesh.position.y = pos[1];
 	mesh.position.z = pos[2];
-
-	mesh.rotation.x = selectedCube.rotation.x;
-	mesh.rotation.y = selectedCube.rotation.y;
-	mesh.rotation.z = selectedCube.rotation.z;
 
 	mesh.updateMatrix();
 	mesh.matrixAutoUpdate = false;
@@ -164,6 +157,7 @@ function createContainer(selectedCube){
 }
 
 function createNewCubes(){
+	//create the cubes
 	if(selection == null){
 		event.preventDefault();
 		var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
@@ -186,6 +180,7 @@ function createNewCubes(){
 }
 
 function drawSphere(x,y,z){
+	//draw the sphere to help the user to get oriented when rotating the object or the scene
 	var geometry = new THREE.SphereGeometry(60,32,32);
 	var material = new THREE.MeshBasicMaterial({color: 999999, transparent: true, opacity	: 0.2});
 	ballMesh = new THREE.Mesh(geometry, material);
@@ -196,17 +191,14 @@ function drawSphere(x,y,z){
 }
 
 function toRadians(angle){
+	//convert from degrees to radians
 	return angle * (Math.PI / 100);
-}
-
-function toDegrees(angle){
-	return angle * (180 / Math.PI);
 }
 
 function onMouseLeftButtomDown (event){
 	isDragging = true;
 	event.preventDefault();
-	//check if the buttom used was the left buttom of the mouse
+
 	var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
 	var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -219,7 +211,9 @@ function onMouseLeftButtomDown (event){
 
 	//Find all intersected objects
 	var intersects = raycaster.intersectObjects(objects);
-	if(moveMode){		
+	//check if the current mode is the move mode
+	if(moveMode){
+		controls.enabled = false;		
 		if(intersects.length > 0){
 			controls.enabled = false;
 			selection = intersects[0].object;
@@ -241,7 +235,7 @@ function onMouseLeftButtomDown (event){
 			//create the new cube centered at the mouse coordinate click			
 			createNewCubes();
 		}
-
+		//update the current offset
 		if(selection != null && container == null){
 				var intersects = raycaster.intersectObject(plane);
 				offset.copy(intersects[0].point).sub(plane.position);
@@ -249,7 +243,7 @@ function onMouseLeftButtomDown (event){
 		
 
 	}
-	//check if the right buttom of the mouse was clicked
+	//check if the current mode is the rotate mode
 	else if(!moveMode){
 		controls.enabled = true;
 		if(intersects.length > 0){
@@ -260,15 +254,13 @@ function onMouseLeftButtomDown (event){
 				scene.remove(container);
 				container = null;
 			}
-			//create the container
 
 			drawSphere(selection.position.x,selection.position.y,selection.position.z);
 			controls.enabled = false;
 			
 			
 		}
-		//rotate the scene if dbclick on the screen
-		//clicked on the screen
+		//clicked somewere on the screen that a cube isn't present
 		else{
 			selection = null;
 			//remove the container that was already active
@@ -285,7 +277,6 @@ function onMouseLeftButtomDown (event){
 function mouseReleased(event){
 	if(moveMode){
 		moveObject = false;
-		selection = null;
 		isDragging = false;
 	}
 	if(!moveMode){
@@ -300,7 +291,6 @@ function onMouseLeftButtomPressed(cube){
 			x: event.offsetX - rotateStartPoint.x,
 			y: event.offsetY - rotateStartPoint.y
 	}
-
 	if(moveObject){				
 		event.preventDefault();
 		//Get mouse position
@@ -320,10 +310,14 @@ function onMouseLeftButtomPressed(cube){
 				selection.position.copy(intersects[0].point.sub(offset));
 				scene.remove(container);
 				createContainer(selection);	
+			}
+			else{
+				selection = null;
 			}							
 		}		
 		else{
 			var intersects = raycaster.intersectObjects(scene.children);
+			//update the plane
 			if(intersects.length >0){
 				plane.position.copy(intersects[0].object.position);
 				plane.lookAt(camera.position);
@@ -344,16 +338,16 @@ function onMouseLeftButtomPressed(cube){
 			raycaster.set(camera.position, vector.sub(camera.position).normalize());
 
 			var intersects = raycaster.intersectObjects(objects);
-			//checa se nao tem cubo selecionado
+			//check if there isnt any cube selected
 			if (intersects.length == 0){
 				plane.lookAt(camera.position);
 			}
-			//cubo selecionado
+			//any cube was selected
 			else{
 				if(selection != null){
 					var deltaRotateQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler
 						(toRadians(deltaMove.y * 1),toRadians(deltaMove.x* 1),0,'XYZ'));
-					selection.quaternion.multiplyQuaternions(deltaRotateQuaternion,selection.quaternion);				
+					selection.quaternion.multiplyQuaternions(deltaRotateQuaternion,selection.quaternion);
 				}
 			}
 			rotateStartPoint = {
