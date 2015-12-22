@@ -142,15 +142,20 @@ function createContainer(selectedCube){
 	var material = new THREE.MeshLambertMaterial ( { color: 0xffffff} );
 	var mesh = new THREE.Mesh( geometry, material);	
 
-	mesh.position.x = pos[0];
-	mesh.position.y = pos[1];
-	mesh.position.z = pos[2];
-
 	mesh.updateMatrix();
 	mesh.matrixAutoUpdate = false;
 
 	var cube = new THREE.BoxHelper( mesh );
 	cube.material.color.set("black");
+	cube.rotation.x = selectedCube.rotation.x;
+	cube.rotation.y = selectedCube.rotation.y;
+	cube.rotation.z = selectedCube.rotation.z;
+
+
+	cube.position.x = pos[0];
+	cube.position.y = pos[1];
+	cube.position.z = pos[2];
+
 
 	scene.add(cube);
 	container = cube;
@@ -255,6 +260,7 @@ function onMouseLeftButtomDown (event){
 				container = null;
 			}
 
+			createContainer(selection);
 			drawSphere(selection.position.x,selection.position.y,selection.position.z);
 			controls.enabled = false;
 			
@@ -348,6 +354,10 @@ function onMouseLeftButtomPressed(cube){
 					var deltaRotateQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler
 						(toRadians(deltaMove.y * 1),toRadians(deltaMove.x* 1),0,'XYZ'));
 					selection.quaternion.multiplyQuaternions(deltaRotateQuaternion,selection.quaternion);
+
+					container.rotation.x = selection.rotation.x;
+					container.rotation.y = selection.rotation.y;
+					container.rotation.z = selection.rotation.z;
 				}
 			}
 			rotateStartPoint = {
