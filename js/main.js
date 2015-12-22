@@ -188,15 +188,27 @@ function createNewCubes(){
 	}	
 }
 
-function drawSphere(x,y,z){
+function drawSphere(x,y,z, k){
 	//draw the sphere to help the user to get oriented when rotating the object or the scene
-	var geometry = new THREE.SphereGeometry(60,32,32);
-	var material = new THREE.MeshBasicMaterial({color: 999999, transparent: true, opacity	: 0.2});
-	ballMesh = new THREE.Mesh(geometry, material);
-	ballMesh.position.x = x;
-	ballMesh.position.y = y;
-	ballMesh.position.z = z;
-	scene.add(ballMesh);
+	if(k){
+		var geometry = new THREE.SphereGeometry(60,32,32);
+		var material = new THREE.MeshBasicMaterial({color: 999999, transparent: true, opacity	: 0.2});
+		ballMesh = new THREE.Mesh(geometry, material);
+		ballMesh.position.x = x;
+		ballMesh.position.y = y;
+		ballMesh.position.z = z;
+		scene.add(ballMesh);
+	}
+	else{
+		var geometry = new THREE.SphereGeometry(150,32,32);
+		var material = new THREE.MeshBasicMaterial({color: 999999, transparent: true, opacity	: 0.2});
+		ballMesh = new THREE.Mesh(geometry, material);
+		ballMesh.position.x = x;
+		ballMesh.position.y = y;
+		ballMesh.position.z = z;
+		scene.add(ballMesh);
+	}
+	
 }
 
 function toRadians(angle){
@@ -265,7 +277,7 @@ function onMouseLeftButtomDown (event){
 			}
 
 			createContainer(selection);
-			drawSphere(selection.position.x,selection.position.y,selection.position.z);
+			drawSphere(selection.position.x,selection.position.y,selection.position.z,true);
 			controls.enabled = false;
 			
 			
@@ -277,7 +289,7 @@ function onMouseLeftButtomDown (event){
 			scene.remove(container);
 			container = null;
 
-			drawSphere(0,0,0);
+			drawSphere(0,0,0,false);
 			controls.enabled = true;
 		}
 
